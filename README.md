@@ -90,6 +90,10 @@ Environment variables (via `.env` or shell):
 - **Do not** put every tool in `canonical`. Use `advanced` and `internal` tiers to defer niche tools.
 - **Do not** skip `validate_registry.py`. Cross-reference bugs are silent.
 
+## Acknowledgments
+
+This template was inspired by [josharsh](https://github.com/josharsh)'s work on MCP broker patterns.
+
 ## License
 
 MIT. See `LICENSE`.
