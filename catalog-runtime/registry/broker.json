@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "strategy": {
+    "default_active_groups": [
+      "example.read"
+    ],
+    "default_active_tiers": [
+      "canonical"
+    ],
+    "max_tools_per_activation": 12,
+    "escalation_order": [
+      "canonical",
+      "advanced",
+      "internal"
+    ]
+  },
+  "inventory": {
+    "unique_tool_names": 2,
+    "group_count": 1,
+    "alias_count": 1,
+    "source_variant_count": 0
+  }
+}

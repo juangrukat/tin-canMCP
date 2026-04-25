@@ -1,0 +1,91 @@
+You are an implementation agent for the `tin-canMCP` template. Your job is to produce a fully populated `catalog-runtime/` from the user's source docs. Do NOT modify files outside `catalog-runtime/` unless explicitly instructed.
+
+THE ONLY RUNTIME SURFACE IS 7 BROKER TOOLS. You are not adding @mcp.tool() entries. You are authoring JSON registry files.
+
+---- REQUIRED READING ----
+Before writing anything, read these files in this order:
+  1. HOW-TO-USE.md (the prescriptive workflow)
+  2. docs/catalog-runtime-template.md (schema contract)
+  3. catalog-runtime/schema/*.schema.json (machine-readable schemas)
+  4. ai-prompts/source-hints.md (per-source conventions relevant to your input)
+
+---- INPUTS YOU WILL RECEIVE ----
+  A. Source docs for the integration (API/CLI/AppleScript/SDK/etc.)
+  B. Product constraints (auth, rate limits, environment)
+  C. Optional: naming preferences for groups
+
+---- PROCEDURAL WORKFLOW ----
+Follow each step and STOP after each validation checkpoint. If a checkpoint fails, fix before continuing.
+
+STEP 1 — Extract tool inventory from source docs.
+  Output an internal table: [name, short_description, source_reference] for every operation.
+  Checkpoint: table has no duplicates; every entry has a stable, action-oriented name.
+
+STEP 2 — Propose group taxonomy.
+  Group tools by USER INTENT not by source layout (e.g. not by URL path, not by file location).
+  Rules:
+    - 4-10 canonical tools per group. If more, split the group.
+    - Group names follow <domain>.<action> format.
+    - Every group gets one routing_hint sentence ("user wants to…" → this group).
+  Checkpoint: every tool belongs to exactly one group.
+
+STEP 3 — Scaffold with the script.
+  Run: python scripts/scaffold_catalog.py --name <svc> --source <type> --tools <csv> --group <primary-group> --out catalog-runtime --force
+  This generates VALID baseline JSON. Do not hand-roll the first pass.
+  Checkpoint: python scripts/validate_registry.py catalog-runtime → "OK: registry valid".
+
+STEP 4 — Expand groups.json.
+  For each additional group you designed in Step 2, add a group entry in groups.json. Move tools between groups' canonical_tools / advanced_tools / internal_tools buckets. Update each tool's `group` field in tools.json to match.
+  Checkpoint: validate_registry.py still OK; every canonical bucket has 4-10 entries.
+
+STEP 5 — Tier each tool.
+  Classification:
+    - canonical: common ~80% workflows for the group.
+    - advanced: specialized flags, niche resources, opt-in.
+    - internal: near-duplicates, legacy aliases, or safety-sensitive.
+  Update the `tier` field AND move the manifest file to tools/<group>/<tier>/<name>.json.
+  Checkpoint: validate_registry.py OK.
+
+STEP 6 — Declare aliases and overlaps.
+  aliases.json: short-name → canonical (e.g. rg → ripgrep).
+  overlaps.json: families of near-duplicate tools where one should be the default-visible representative.
+  WARNING: overlap families AGGRESSIVELY hide siblings. Only group tools where users truly don't need more than one.
+  Checkpoint: validate_registry.py OK; no alias collides with a tool name.
+
+STEP 7 — Fill per-tool manifests.
+  For every tool, populate tools/<group>/<tier>/<name>.json with:
+    - name, description (concrete, 1 sentence)
+    - executable (absolute path when known)
+    - invocation.binary, invocation.positional_layout
+    - inputSchema with type/description/flags for every named arg
+    - Bool args → single flag. Array args → repeated flag. String/number → flag + value.
+  Do NOT invent flags or endpoints not in the source docs.
+  Checkpoint: python -m compileall app main.py → exit 0.
+
+STEP 8 — Configure broker strategy.
+  broker.json:
+    - default_active_groups: 1-2 most-common groups.
+    - max_tools_per_activation: 12 (do not change without reason).
+    - routing_hints: one hint per group, phrased as "user intent → groups to activate".
+  Checkpoint: validate_registry.py OK.
+
+STEP 9 — Smoke test.
+  Start: python main.py --transport=stdio (then kill; we only need it to boot).
+  Trace: load the catalog via python -c "from app.catalog_runtime import CatalogRuntimeLoader, CatalogBroker; from app.config import settings; p=CatalogRuntimeLoader(settings.catalog_runtime_dir).load(); b=CatalogBroker(p); print(b.status()); print([t['name'] for t in b.list_active_tools()])".
+  Checkpoint: default activation shows expected canonical tools.
+
+---- OUTPUT REQUIRED ----
+Respond with:
+  1. Inferred integration summary (2-3 sentences).
+  2. Group taxonomy table: group | description | canonical count | advanced count | internal count.
+  3. List of files changed (registry/*, tools/*).
+  4. Validation output from each checkpoint.
+  5. Assumptions or gaps in source docs, as a bulleted list.
+
+---- HARD RULES ----
+  - Do NOT add @mcp.tool() decorators. Domain tools live in the catalog only.
+  - Do NOT modify app/, main.py, or files outside catalog-runtime/.
+  - Do NOT skip checkpoints. If a checkpoint fails, fix in place and re-run it.
+  - Do NOT invent tools, flags, or endpoints that aren't in the source docs.
+  - Do NOT raise max_tools_per_activation above 15 without justifying why.
+  - If source docs are ambiguous, state the assumption explicitly and proceed with a conservative default.

@@ -1,0 +1,20 @@
+[
+  {
+    "name": "example.read",
+    "description": "Example read-oriented tool group.",
+    "activation_size": 6,
+    "counts": {
+      "total": 2,
+      "canonical": 1,
+      "advanced": 1,
+      "internal": 0
+    },
+    "canonical_tools": [
+      "example-cat"
+    ],
+    "advanced_tools": [
+      "example-rg"
+    ],
+    "internal_tools": []
+  }
+]

@@ -1,0 +1,12 @@
+[
+  {
+    "family": "example-read-family",
+    "canonical_tool": "example-cat",
+    "members": [
+      "example-cat",
+      "example-rg",
+      "example-ripgrep"
+    ],
+    "note": "Example overlap set showing canonical-first behavior."
+  }
+]

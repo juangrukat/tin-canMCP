@@ -1,0 +1,30 @@
+[
+  {
+    "name": "example-cat",
+    "description": "Example canonical file reader tool.",
+    "group": "example.read",
+    "tier": "canonical",
+    "status": "active",
+    "canonical_tool": "example-cat",
+    "overlap_family": "example-read-family",
+    "source_path": "/path/to/source/example-cat.json",
+    "catalog_path": "/path/to/catalog-runtime/tools/example.read/canonical/example-cat.json",
+    "executable": "cat",
+    "priority": 100,
+    "default_exposed": true
+  },
+  {
+    "name": "example-rg",
+    "description": "Example advanced search tool.",
+    "group": "example.read",
+    "tier": "advanced",
+    "status": "active",
+    "canonical_tool": "example-cat",
+    "overlap_family": "example-read-family",
+    "source_path": "/path/to/source/example-rg.json",
+    "catalog_path": "/path/to/catalog-runtime/tools/example.read/advanced/example-rg.json",
+    "executable": "rg",
+    "priority": 60,
+    "default_exposed": false
+  }
+]
